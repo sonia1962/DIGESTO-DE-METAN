@@ -1,0 +1,167 @@
+index.html
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Digesto Municipal - San José de Metán</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-gray-100 text-gray-800 font-sans min-h-screen flex flex-col">
+
+  <!-- Encabezado Institucional -->
+  <header class="bg-blue-900 text-white shadow-md">
+    <div class="max-w-7xl mx-auto px-4 py-4 flex flex-col sm:flex-row justify-between items-center gap-2">
+      <div class="flex items-center space-x-3">
+        <i class="fa-solid fa-landmark text-3xl text-yellow-400"></i>
+        <div>
+          <h1 class="text-xl font-bold tracking-wide">DIGESTO MUNICIPAL</h1>
+          <p class="text-xs text-blue-200">Concejo Deliberante de San José de Metán</p>
+        </div>
+      </div>
+      <a href="https://drive.google.com/drive/folders/1dCLgUwrw54W4nCTXliuY2k8CXfILLnp5" target="_blank" class="bg-blue-800 hover:bg-blue-700 text-xs px-3 py-2 rounded-lg flex items-center gap-2 border border-blue-600 transition">
+        <i class="fa-brands fa-google-drive text-yellow-400"></i> Abrir Carpeta Drive
+      </a>
+    </div>
+  </header>
+
+  <!-- Panel de Búsqueda y Filtros -->
+  <main class="max-w-7xl mx-auto px-4 py-6 flex-grow w-full">
+    <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 mb-6">
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
+        <div class="md:col-span-2 relative">
+          <i class="fa-solid fa-magnifying-glass absolute left-3 top-3.5 text-gray-400"></i>
+          <input type="text" id="searchInput" onkeyup="filterDocs()" placeholder="Buscar por número, título o tema..." class="w-full pl-10 pr-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-800 border-gray-300">
+        </div>
+        <div>
+          <select id="yearFilter" onchange="filterDocs()" class="w-full py-2.5 px-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-800 border-gray-300 bg-white">
+            <option value="">Todos los Años</option>
+            <option value="2026">2026</option>
+            <option value="2025">2025</option>
+            <option value="2024">2024</option>
+            <option value="2023">2023</option>
+          </select>
+        </div>
+        <div>
+          <select id="catFilter" onchange="filterDocs()" class="w-full py-2.5 px-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-800 border-gray-300 bg-white">
+            <option value="">Todas las Temáticas</option>
+            <option value="Obras Públicas">Obras Públicas</option>
+            <option value="Presupuesto">Presupuesto y Hacienda</option>
+            <option value="Tránsito">Tránsito y Transporte</option>
+            <option value="Medio Ambiente">Medio Ambiente</option>
+            <option value="Institucional">Institucional / General</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Contenedor Principal: Lista y Visor -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      <!-- Lista de Ordenanzas -->
+      <div class="lg:col-span-5 bg-white rounded-xl shadow-sm border border-gray-200 p-4 max-h-[650px] overflow-y-auto" id="listContainer">
+        <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3 flex justify-between items-center">
+          <span>Ordenanzas Registradas</span>
+          <span id="countBadge" class="bg-blue-100 text-blue-900 text-xs px-2 py-0.5 rounded-full font-bold">0</span>
+        </h2>
+        <div id="resultsList" class="space-y-2">
+          <!-- Los elementos se cargan dinámicamente -->
+        </div>
+      </div>
+
+      <!-- Visor de PDF Integrado -->
+      <div class="lg:col-span-7 bg-white rounded-xl shadow-sm border border-gray-200 p-4 flex flex-col h-[650px]">
+        <div class="flex justify-between items-center mb-3 pb-2 border-b">
+          <h3 id="viewerTitle" class="font-bold text-gray-800 truncate">Seleccione una ordenanza para visualizar</h3>
+          <div id="viewerActions" class="hidden flex gap-2">
+            <a id="downloadBtn" href="#" target="_blank" class="text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1.5 rounded flex items-center gap-1 border">
+              <i class="fa-solid fa-external-link"></i> Abrir en Drive
+            </a>
+          </div>
+        </div>
+        <div class="flex-grow bg-gray-50 rounded-lg overflow-hidden border relative flex items-center justify-center" id="iframeWrapper">
+          <p id="placeholderText" class="text-gray-400 text-sm text-center px-4">
+            <i class="fa-regular fa-file-pdf text-4xl mb-2 block"></i>
+            Haga clic en una ordenanza de la lista para cargar la vista previa del documento.
+          </p>
+          <iframe id="pdfViewer" class="w-full h-full hidden" frameborder="0"></iframe>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="bg-gray-800 text-gray-400 text-xs py-4 text-center mt-auto">
+    <p>Sistema de Consulta de Digesto Municipal - San José de Metán, Salta</p>
+  </footer>
+
+  <script>
+    // Ejemplo de estructura de datos indexada desde la carpeta de Drive
+    const mockData = [
+      { id: '1dCLgUwrw54W4nCTXliuY2k8CXfILLnp5', num: 'Ord. N° 3.450/24', anio: '2024', titulo: 'Aprobación del Presupuesto General de Gastos y Cálculo de Recursos', cat: 'Presupuesto', driveId: 'DOCUMENT_DRIVE_ID_1' },
+      { id: '1dCLgUwrw54W4nCTXliuY2k8CXfILLnp5', num: 'Ord. N° 3.451/24', anio: '2024', titulo: 'Regulación del Sentido de Circulación de Calles en Barrio El Crestón', cat: 'Tránsito', driveId: 'DOCUMENT_DRIVE_ID_2' },
+      { id: '1dCLgUwrw54W4nCTXliuY2k8CXfILLnp5', num: 'Ord. N° 3.452/24', anio: '2024', titulo: 'Creación del Repositorio Digital Institucional de Actas y Sesiones', cat: 'Institucional', driveId: 'DOCUMENT_DRIVE_ID_3' }
+    ];
+
+    function renderList(items) {
+      const list = document.getElementById('resultsList');
+      document.getElementById('countBadge').innerText = items.length;
+      list.innerHTML = '';
+
+      if(items.length === 0) {
+        list.innerHTML = '<p class="text-xs text-gray-400 text-center py-4">No se encontraron ordenanzas.</p>';
+        return;
+      }
+
+      items.forEach(item => {
+        const card = document.createElement('div');
+        card.className = 'p-3 border rounded-lg hover:border-blue-500 hover:bg-blue-50/50 cursor-pointer transition flex justify-between items-start gap-2';
+        card.onclick = () => loadPDF(item);
+        card.innerHTML = `
+          <div>
+            <div class="flex items-center gap-2 mb-1">
+              <span class="font-bold text-blue-900 text-xs bg-blue-100 px-2 py-0.5 rounded">${item.num}</span>
+              <span class="text-[10px] text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded">${item.anio}</span>
+            </div>
+            <p class="text-xs font-medium text-gray-700 line-clamp-2">${item.titulo}</p>
+            <span class="inline-block mt-2 text-[10px] text-gray-400 bg-gray-50 px-1.5 py-0.5 rounded border">${item.cat}</span>
+          </div>
+          <i class="fa-solid fa-chevron-right text-gray-300 text-xs mt-1"></i>
+        `;
+        list.appendChild(card);
+      });
+    }
+
+    function loadPDF(item) {
+      document.getElementById('viewerTitle').innerText = `${item.num} - ${item.titulo}`;
+      document.getElementById('placeholderText').classList.add('hidden');
+      const iframe = document.getElementById('pdfViewer');
+      iframe.classList.remove('hidden');
+      
+      // Enlace embebido del visor de Google Drive
+      iframe.src = `https://drive.google.com/file/d/${item.driveId}/preview`;
+      
+      const actions = document.getElementById('viewerActions');
+      actions.classList.remove('hidden');
+      document.getElementById('downloadBtn').href = `https://drive.google.com/file/d/${item.driveId}/view`;
+    }
+
+    function filterDocs() {
+      const q = document.getElementById('searchInput').value.toLowerCase();
+      const y = document.getElementById('yearFilter').value;
+      const c = document.getElementById('catFilter').value;
+
+      const filtered = mockData.filter(d => {
+        const matchesText = d.num.toLowerCase().includes(q) || d.titulo.toLowerCase().includes(q) || d.cat.toLowerCase().includes(q);
+        const matchesYear = y === '' || d.anio === y;
+        const matchesCat = c === '' || d.cat === c;
+        return matchesText && matchesYear && matchesCat;
+      });
+
+      renderList(filtered);
+    }
+
+    // Carga inicial
+    renderList(mockData);
+  </script>
+</body>
+</html>
